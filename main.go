@@ -2,7 +2,9 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"math"
 	"os"
 	"strconv"
@@ -26,6 +28,7 @@ func main() {
 	// printIngredients(recipe2)
 
 	fmt.Println("Ciabatta v0.1")
+	defaultFolder := "/home/rick/Documents/Recipes/"
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("---------------------")
 
@@ -61,6 +64,24 @@ func main() {
 			i, _ := strconv.ParseInt(inputSpaced[1], 10, 64)
 
 			currRecipe = convertRecipe(int(i), currRecipe)
+		}
+
+		if strings.HasPrefix(input, ":s") {
+			location := defaultFolder + currRecipe.Name + ".json"
+			fmt.Println(location)
+
+			file, _ := json.MarshalIndent(currRecipe, "", " ")
+			_ = ioutil.WriteFile(location, file, 0644)
+		}
+
+		if strings.HasPrefix(input, ":o") {
+			location := defaultFolder + inputSpaced[1] + ".json"
+
+			file, _ := os.Open(location)
+			byteValue, _ := ioutil.ReadAll(file)
+			_ = json.Unmarshal(byteValue, &currRecipe)
+
+			fmt.Println(location)
 		}
 
 		if strings.HasPrefix(input, ":q") {

@@ -1,9 +1,17 @@
 package main
 
+import "math"
+
 //AddFlower adds flower to the recipe
 func (r *Recipe) AddFlower(amount int) {
 	flower := Ingredient{"Flower", amount, 1}
 	r.Flower = flower
+
+	for i, ing := range r.Ingredients {
+		newAmount := float64(amount) * ing.Factor
+		ing.Amount = int(math.Round(newAmount))
+		r.Ingredients[i] = ing
+	}
 }
 
 //AddIngredient adds an ingredient to the recipe
