@@ -22,6 +22,7 @@ In case of the baking process I found out that there are various steps (autolyse
 * Bake
 
 ## Features
+* Only been tested on Linux, might function elsewhere.
 * Add and list ingredients
 * Save and open recipes
 * Scale ingredients, by editing the amount of flour
@@ -30,4 +31,4 @@ In case of the baking process I found out that there are various steps (autolyse
 * Edit recipes
 * Add processes based upon the 5 'functions'
 * Run recipes according to the process
-* Set a timer (with an alarm sound/notification)
+* Start a timer (with an alarm sound/notification)
