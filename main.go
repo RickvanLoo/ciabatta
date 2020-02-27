@@ -5,30 +5,17 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"math"
 	"os"
 	"strconv"
 	"strings"
-	"text/tabwriter"
 )
 
 var currRecipe *Recipe
+var defaultFolder string
 
 func main() {
-	// recipe := newRecipe("Pizza")
-	// recipe.AddFlower(1500)
-	// recipe.AddIngredient("Water", 1000)
-	// recipe.AddIngredient("Oil", 50)
-	// recipe.AddIngredient("Salt", 25)
-	// recipe.AddIngredient("Honey", 10)
-	// recipe.AddIngredient("Dry Yeast", 5)
-	// printIngredients(recipe)
-
-	// recipe2 := convertRecipe(1000, recipe)
-	// printIngredients(recipe2)
-
 	fmt.Println("Ciabatta v0.1")
-	defaultFolder := "/home/rick/Documents/Recipes/"
+	defaultFolder = "/home/rick/Documents/Recipes/"
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Println("---------------------")
 
@@ -37,91 +24,73 @@ func main() {
 		input, _ := reader.ReadString('\n')
 		// convert CRLF to LF
 		input = strings.Replace(input, "\n", "", -1)
-		inputSpaced := strings.Split(input, " ")
-
-		if strings.HasPrefix(input, ":n") {
-			fmt.Println("New Recipe: " + inputSpaced[1])
-			currRecipe = newRecipe(inputSpaced[1])
-		}
-
-		if strings.HasPrefix(input, ":f") {
-			i, _ := strconv.ParseInt(inputSpaced[1], 10, 64)
-
-			currRecipe.AddFlower(int(i))
-		}
-
-		if strings.HasPrefix(input, ":a") {
-			i, _ := strconv.ParseInt(inputSpaced[2], 10, 64)
-
-			currRecipe.AddIngredient(inputSpaced[1], int(i))
-		}
-
-		if strings.HasPrefix(input, ":p") {
-			printIngredients(currRecipe)
-		}
-
-		if strings.HasPrefix(input, ":c") {
-			i, _ := strconv.ParseInt(inputSpaced[1], 10, 64)
-
-			currRecipe = convertRecipe(int(i), currRecipe)
-		}
-
-		if strings.HasPrefix(input, ":s") {
-			location := defaultFolder + currRecipe.Name + ".json"
-			fmt.Println(location)
-
-			file, _ := json.MarshalIndent(currRecipe, "", " ")
-			_ = ioutil.WriteFile(location, file, 0644)
-		}
-
-		if strings.HasPrefix(input, ":o") {
-			location := defaultFolder + inputSpaced[1] + ".json"
-
-			file, _ := os.Open(location)
-			byteValue, _ := ioutil.ReadAll(file)
-			_ = json.Unmarshal(byteValue, &currRecipe)
-
-			fmt.Println(location)
-		}
-
-		if strings.HasPrefix(input, ":q") {
-			os.Exit(0)
-		}
+		ProcessInput(input)
 
 	}
 }
 
-func newRecipe(name string) *Recipe {
+//NewRecipe creates a new recipe and replaces the recipe in memory
+func NewRecipe(name string) *Recipe {
 	recipe := new(Recipe)
 	recipe.Name = name
 	return recipe
 }
 
-func printIngredients(r *Recipe) {
-	w := new(tabwriter.Writer)
-	fmt.Println("Recipe: " + r.Name)
-	w.Init(os.Stdout, 0, 8, 0, '\t', 0)
-	fmt.Fprintln(w, "Name\tAmount\tFactor")
-	flowerString := r.Flower.Name + "\t" + strconv.Itoa(r.Flower.Amount) + "\t" + fmt.Sprintf("%f", r.Flower.Factor)
-	fmt.Fprintln(w, flowerString)
+//ProcessInput takes console input as string and executes commands
+func ProcessInput(input string) {
+	inputSpaced := strings.Split(input, " ")
 
-	for _, ing := range r.Ingredients {
-		printString := ing.Name + "\t" + strconv.Itoa(ing.Amount) + "\t" + fmt.Sprintf("%f", ing.Factor)
-		fmt.Fprintln(w, printString)
+	if strings.HasPrefix(input, ":new") {
+		fmt.Println("New Recipe: " + inputSpaced[1])
+		currRecipe = NewRecipe(inputSpaced[1])
 	}
 
-	fmt.Fprintln(w)
-	w.Flush()
+	if strings.HasPrefix(input, ":f") {
+		i, _ := strconv.ParseInt(inputSpaced[1], 10, 64)
+
+		currRecipe.AddFlower(int(i))
+	}
+
+	if strings.HasPrefix(input, ":a") {
+		i, _ := strconv.ParseInt(inputSpaced[2], 10, 64)
+
+		currRecipe.AddIngredient(inputSpaced[1], int(i))
+	}
+
+	if strings.HasPrefix(input, "ls") {
+		currRecipe.printIngredients()
+	}
+
+	if strings.HasPrefix(input, ":s") {
+		Save()
+	}
+
+	if strings.HasPrefix(input, ":o") {
+		Open(inputSpaced[1])
+	}
+
+	if strings.HasPrefix(input, ":q") {
+		os.Exit(0)
+	}
+
 }
 
-func convertRecipe(amount int, r *Recipe) *Recipe {
-	covR := newRecipe(r.Name + strconv.Itoa(amount))
-	covR.AddFlower(amount)
+//Save recipe to defaultFolder/RecipeName.json
+func Save() {
+	location := defaultFolder + currRecipe.Name + ".json"
+	fmt.Println(location)
 
-	for _, ing := range r.Ingredients {
-		newAmount := float64(amount) * ing.Factor
-		covR.AddIngredient(ing.Name, int(math.Round(newAmount)))
-	}
+	file, _ := json.MarshalIndent(currRecipe, "", " ")
+	_ = ioutil.WriteFile(location, file, 0644)
+}
 
-	return covR
+//Open recipe from defaultFolder/name.json
+func Open(name string) {
+	location := defaultFolder + name + ".json"
+
+	file, _ := os.Open(location)
+	byteValue, _ := ioutil.ReadAll(file)
+	_ = json.Unmarshal(byteValue, &currRecipe)
+
+	fmt.Println(location)
 }
