@@ -28,23 +28,6 @@ func (r *Recipe) AddIngredient(name string, amount int) {
 	r.Ingredients = append(r.Ingredients, ing)
 }
 
-//AddMixM adds a Multiple Mixing Step
-func (r *Recipe) AddMixM(indices []int) {
-	var ings []Ingredient
-	for _, i := range indices {
-		ings = append(ings, r.Ingredients[i])
-	}
-
-	step := new(Step)
-	step.Type = MixMT
-	step.Time = 0
-	step.Factor = 1
-	step.Ingredients = ings
-	step.Comment = ""
-
-	r.Process = append(r.Process, *step)
-}
-
 func (r *Recipe) printIngredients() {
 	w := new(tabwriter.Writer)
 	fmt.Println("Recipe: " + r.Name)

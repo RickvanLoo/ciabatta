@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -80,17 +81,45 @@ func Save() {
 	location := defaultFolder + currRecipe.Name + ".json"
 	fmt.Println(location)
 
-	file, _ := json.MarshalIndent(currRecipe, "", " ")
-	_ = ioutil.WriteFile(location, file, 0644)
+	file, err := json.MarshalIndent(currRecipe, "", " ")
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	err = ioutil.WriteFile(location, file, 0644)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
 }
 
 //Open recipe from defaultFolder/name.json
 func Open(name string) {
 	location := defaultFolder + name + ".json"
 
-	file, _ := os.Open(location)
-	byteValue, _ := ioutil.ReadAll(file)
-	_ = json.Unmarshal(byteValue, &currRecipe)
+	file, err := os.Open(location)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	byteValue, err := ioutil.ReadAll(file)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	err = json.Unmarshal(byteValue, &currRecipe)
+
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	fmt.Println(location)
 }
