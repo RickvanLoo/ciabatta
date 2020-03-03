@@ -13,6 +13,7 @@ import (
 )
 
 var currRecipe *Recipe
+var execRecipe *Recipe
 var defaultFolder string
 
 func main() {
@@ -35,11 +36,21 @@ func main() {
 func NewRecipe(name string) *Recipe {
 	recipe := new(Recipe)
 	recipe.Name = name
+	recipe.Locked = false
 	return recipe
 }
 
-//ProcessInput takes console input as string and executes commands
+//ProcessInput processes input
 func ProcessInput(input string) {
+	if currRecipe.Locked {
+		processInputLocked(input)
+	} else {
+		processInputUnlocked(input)
+	}
+}
+
+//ProcessInputUnlocked takes arguments when recipe is not locked
+func processInputUnlocked(input string) {
 	inputSpaced := strings.Split(input, " ")
 
 	if strings.HasPrefix(input, ":n") {
@@ -121,14 +132,23 @@ func ProcessInput(input string) {
 	}
 
 	if strings.HasPrefix(input, "ls") {
-		currRecipe.printIngredients()
+		currRecipe.printIngredients(false)
+		currRecipe.printSteps()
 	}
 
 	if strings.HasPrefix(input, ":s") {
 		Save()
 	}
 
-	if strings.HasPrefix(input, ":o") {
+	if strings.HasPrefix(input, ":lock") {
+		fmt.Println("Locked!")
+		currRecipe.execCopy()
+		currRecipe.Steps = nil
+		currRecipe.Locked = true
+		return
+	}
+
+	if strings.HasPrefix(input, ":l") {
 		err := InputArgumentCheck(inputSpaced, 1)
 		if err != nil {
 			log.Println(err)
@@ -142,6 +162,65 @@ func ProcessInput(input string) {
 		os.Exit(0)
 	}
 
+}
+
+func processInputLocked(input string) {
+	inputSpaced := strings.Split(input, " ")
+
+	if strings.HasPrefix(input, ":q") {
+		os.Exit(0)
+	}
+
+	if strings.HasPrefix(input, ":lock") {
+		fmt.Println("Unlocked!")
+		currRecipe.Locked = false
+	}
+
+	if strings.HasPrefix(input, "mix") {
+		ma := createMixArray(inputSpaced[1:], "")
+		currRecipe.Steps = append(currRecipe.Steps, &ma)
+		i := len(currRecipe.Steps) - 1
+
+		err := currRecipe.Steps[i].execute(currRecipe)
+		if err != nil {
+			log.Println(err)
+			delLastStep()
+			return
+		}
+		currRecipe.Steps[i].print(currRecipe)
+		currRecipe.printIngredients(true)
+		currRecipe.printSteps()
+	}
+
+	if strings.HasPrefix(input, "smix") {
+		ms := createMixSingle(inputSpaced[1:], currRecipe, "")
+		currRecipe.Steps = append(currRecipe.Steps, &ms)
+		i := len(currRecipe.Steps) - 1
+
+		err := currRecipe.Steps[i].execute(currRecipe)
+		if err != nil {
+			log.Println(err)
+			delLastStep()
+			return
+		}
+		currRecipe.Steps[i].print(currRecipe)
+		currRecipe.printIngredients(true)
+		currRecipe.printSteps()
+	}
+
+	if strings.HasPrefix(input, "ls") {
+		currRecipe.printIngredients(true)
+		currRecipe.printSteps()
+	}
+
+	if strings.HasPrefix(input, "del") {
+		delLastStep()
+	}
+
+}
+
+func delLastStep() {
+	currRecipe.Steps = currRecipe.Steps[:len(currRecipe.Steps)-1]
 }
 
 //InputArgumentCheck checks spaced input array for correct amount of arguments

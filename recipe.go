@@ -10,6 +10,7 @@ import (
 )
 
 //AddFlower adds flower to the recipe
+//Can also be used to edit
 func (r *Recipe) AddFlower(amount int) {
 	flower := Ingredient{"Flower", amount, 1}
 	r.Flower = flower
@@ -51,19 +52,43 @@ func (r *Recipe) EditIngredient(id int, amount int) error {
 	return nil
 }
 
-func (r *Recipe) printIngredients() {
+func (r *Recipe) printIngredients(exec bool) {
+	var flower Ingredient
+	var ingredients []Ingredient
+	if exec {
+		flower = r.ExecFlower
+		ingredients = r.ExecIngredients
+		fmt.Println("Remaining Ingredients:")
+
+	} else {
+		flower = r.Flower
+		ingredients = r.Ingredients
+		fmt.Println("Recipe: " + r.Name)
+	}
+
 	w := new(tabwriter.Writer)
-	fmt.Println("Recipe: " + r.Name)
 	w.Init(os.Stdout, 0, 8, 0, '\t', 0)
 	fmt.Fprintln(w, "ID\tName\tAmount\tFactor")
-	flowerString := "f\t" + r.Flower.Name + "\t" + strconv.Itoa(r.Flower.Amount) + "\t" + fmt.Sprintf("%f", r.Flower.Factor)
+	flowerString := "f\t" + flower.Name + "\t" + strconv.Itoa(flower.Amount) + "\t" + fmt.Sprintf("%f", flower.Factor)
 	fmt.Fprintln(w, flowerString)
 
-	for i, ing := range r.Ingredients {
+	for i, ing := range ingredients {
 		printString := strconv.Itoa(i) + "\t" + ing.Name + "\t" + strconv.Itoa(ing.Amount) + "\t" + fmt.Sprintf("%f", ing.Factor)
 		fmt.Fprintln(w, printString)
 	}
 
 	fmt.Fprintln(w)
 	w.Flush()
+}
+
+func (r *Recipe) printSteps() {
+	for _, step := range r.Steps {
+		step.print(r)
+	}
+}
+
+func (r *Recipe) execCopy() {
+	r.ExecIngredients = make([]Ingredient, len(r.Ingredients))
+	copy(r.ExecIngredients, r.Ingredients)
+	r.ExecFlower = r.Flower
 }
